@@ -1,4 +1,4 @@
-@"
+
 # Domain Model
 
 Dette dokument beskriver de centrale domænebegreber i VoltEdge MVP'en.
@@ -37,4 +37,3 @@ Eksempel:
 
 - Input: Telemetry readings og charging sessions
 - Output: Load forecast eller risk score
-"@ | Set-Content docs\architecture\domain-model.md
