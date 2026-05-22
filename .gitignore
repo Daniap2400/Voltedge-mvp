@@ -1,12 +1,14 @@
-cat > .gitignore << 'EOF'
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+
+# Virtual environment
 .venv/
 venv/
 env/
 
-# Environment
+# Environment variables
 .env
 
 # VS Code
@@ -19,9 +21,15 @@ Thumbs.db
 # Test/cache
 .pytest_cache/
 .coverage
+htmlcov/
 
-# Data files
+# Build/dist
+build/
+dist/
+*.egg-info/
+
+# Data/database files
 *.csv
 *.xlsx
 *.db
-EOF
+*.sqlite3
