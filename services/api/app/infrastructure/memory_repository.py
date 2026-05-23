@@ -42,6 +42,9 @@ class InMemoryTelemetryRepository:
     def save(self, telemetry: TelemetryReading) -> None:
         self._readings.append(telemetry)
 
+    def list_all(self) -> list[TelemetryReading]:
+        return list(self._readings)
+
     def list_for_charger(self, charger_id: str) -> list[TelemetryReading]:
         return [
             reading

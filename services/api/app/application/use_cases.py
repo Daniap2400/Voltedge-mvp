@@ -13,6 +13,12 @@ from app.domain.models import (
     TelemetryReading,
 )
 
+from app.domain.analytics_service import (
+    AnalyticsService,
+    AnalyticsSummary,
+    ChargerAnalytics,
+)
+
 
 class ChargingUseCases:
     def __init__(
@@ -128,3 +134,43 @@ class ChargingUseCases:
             self.charger_repository.save(charger)
 
         return charger
+
+ 
+class AnalyticsUseCases:
+    def __init__(
+        self,
+        charger_repository: ChargerRepository,
+        session_repository: ChargingSessionRepository,
+        telemetry_repository: TelemetryRepository,
+        analytics_service: AnalyticsService,
+    ) -> None:
+        self.charger_repository = charger_repository
+        self.session_repository = session_repository
+        self.telemetry_repository = telemetry_repository
+        self.analytics_service = analytics_service
+
+    def get_summary(self) -> AnalyticsSummary:
+        chargers = self.charger_repository.list_all()
+        sessions = self.session_repository.list_all()
+        telemetry_readings = self.telemetry_repository.list_all()
+
+        return self.analytics_service.create_summary(
+            chargers=chargers,
+            sessions=sessions,
+            telemetry_readings=telemetry_readings,
+        )
+
+    def get_charger_analytics(self, charger_id: str) -> ChargerAnalytics:
+        charger = self.charger_repository.get_by_id(charger_id)
+
+        if charger is None:
+            raise ValueError("Charger not found")
+
+        sessions = self.session_repository.list_all()
+        telemetry_readings = self.telemetry_repository.list_for_charger(charger_id)
+
+        return self.analytics_service.create_charger_analytics(
+            charger=charger,
+            sessions=sessions,
+            telemetry_readings=telemetry_readings,
+        )
