@@ -1,3 +1,4 @@
+```markdown
 # Rollback-strategi
 
 Denne MVP bruger en simpel rollback-strategi, der passer til projektets scope og Git-baserede workflow.
