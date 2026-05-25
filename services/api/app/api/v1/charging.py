@@ -1,6 +1,7 @@
+import logging
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
 
 from app.application.use_cases import ChargingUseCases
@@ -12,6 +13,7 @@ from app.infrastructure.memory_repository import (
 )
 
 router = APIRouter()
+logger = logging.getLogger("voltedge.api.charging")
 
 charger_repository = InMemoryChargerRepository()
 session_repository = InMemoryChargingSessionRepository()
@@ -25,8 +27,8 @@ use_cases = ChargingUseCases(
 
 
 class TelemetryRequest(BaseModel):
-    charger_id: str = Field(examples=["charger-1"])
-    connector_id: str = Field(examples=["connector-1"])
+    charger_id: str = Field(min_length=1, examples=["charger-1"])
+    connector_id: str = Field(min_length=1, examples=["connector-1"])
     power_kw: float = Field(ge=0, examples=[11.0])
     voltage: float = Field(ge=0, examples=[230.0])
     current_amp: float = Field(ge=0, examples=[16.0])
@@ -34,8 +36,8 @@ class TelemetryRequest(BaseModel):
 
 
 class StartSessionRequest(BaseModel):
-    charger_id: str = Field(examples=["charger-1"])
-    connector_id: str = Field(examples=["connector-1"])
+    charger_id: str = Field(min_length=1, examples=["charger-1"])
+    connector_id: str = Field(min_length=1, examples=["connector-1"])
     user_id: str | None = Field(default=None, examples=["user-1"])
     contract_id: str | None = Field(default=None, examples=["contract-1"])
 
@@ -110,8 +112,24 @@ def register_telemetry(request: TelemetryRequest):
             current_amp=request.current_amp,
             error_code=request.error_code,
         )
+
+        logger.info(
+            "Telemetry registered charger_id=%s connector_id=%s power_kw=%s has_error=%s",
+            request.charger_id,
+            request.connector_id,
+            request.power_kw,
+            request.error_code is not None,
+        )
+
         return ChargerResponse.from_domain(charger)
+
     except ValueError as error:
+        logger.warning(
+            "Telemetry registration failed charger_id=%s connector_id=%s reason=%s",
+            request.charger_id,
+            request.connector_id,
+            str(error),
+        )
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
@@ -124,29 +142,67 @@ def start_session(request: StartSessionRequest):
             user_id=request.user_id,
             contract_id=request.contract_id,
         )
+
+        logger.info(
+            "Charging session started session_id=%s charger_id=%s connector_id=%s",
+            session.session_id,
+            session.charger_id,
+            session.connector_id,
+        )
+
         return ChargingSessionResponse.from_domain(session)
+
     except ValueError as error:
+        logger.warning(
+            "Charging session start failed charger_id=%s connector_id=%s reason=%s",
+            request.charger_id,
+            request.connector_id,
+            str(error),
+        )
         raise HTTPException(status_code=400, detail=str(error)) from error
 
 
 @router.post("/sessions/{session_id}/end", response_model=ChargingSessionResponse)
-def end_session(session_id: str, request: EndSessionRequest):
+def end_session(
+    request: EndSessionRequest,
+    session_id: str = Path(min_length=1),
+):
     try:
         session = use_cases.end_charging_session(
             session_id=session_id,
             energy_delivered_kwh=request.energy_delivered_kwh,
         )
+
+        logger.info(
+            "Charging session ended session_id=%s charger_id=%s energy_delivered_kwh=%s",
+            session.session_id,
+            session.charger_id,
+            session.energy_delivered_kwh,
+        )
+
         return ChargingSessionResponse.from_domain(session)
+
     except ValueError as error:
+        logger.warning(
+            "Charging session end failed session_id=%s reason=%s",
+            session_id,
+            str(error),
+        )
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
 @router.get("/chargers/{charger_id}/status", response_model=ChargerResponse)
-def get_charger_status(charger_id: str):
+def get_charger_status(charger_id: str = Path(min_length=1)):
     try:
         charger = use_cases.get_charger_status(charger_id)
         return ChargerResponse.from_domain(charger)
+
     except ValueError as error:
+        logger.warning(
+            "Charger status request failed charger_id=%s reason=%s",
+            charger_id,
+            str(error),
+        )
         raise HTTPException(status_code=404, detail=str(error)) from error
 
 
