@@ -6,18 +6,12 @@ from pydantic import BaseModel, Field
 
 from app.application.use_cases import ChargingUseCases
 from app.domain.models import Charger, ChargingSession
-from app.infrastructure.memory_repository import (
-    InMemoryChargerRepository,
-    InMemoryChargingSessionRepository,
-    InMemoryTelemetryRepository,
-)
+from app.infrastructure.repository_factory import create_repositories
 
 router = APIRouter()
 logger = logging.getLogger("voltedge.api.charging")
 
-charger_repository = InMemoryChargerRepository()
-session_repository = InMemoryChargingSessionRepository()
-telemetry_repository = InMemoryTelemetryRepository()
+charger_repository, session_repository, telemetry_repository = create_repositories()
 
 use_cases = ChargingUseCases(
     charger_repository=charger_repository,

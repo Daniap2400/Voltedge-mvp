@@ -8,6 +8,30 @@ services:
       - "8000:8000"
     env_file:
       - .env.example
+    environment:
+      APP_ENV: "development"
+      LOG_LEVEL: "INFO"
+      USE_DATABASE: "true"
+      DATABASE_URL: "postgresql+psycopg://voltedge:voltedge@db:5432/voltedge"
+      PYTHONPATH: "/app"
+    depends_on:
+      - db
     volumes:
       - ./services/api:/app
+      - ./:/workspace
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  db:
+    image: postgres:16-alpine
+    container_name: voltedge-db
+    environment:
+      POSTGRES_USER: voltedge
+      POSTGRES_PASSWORD: voltedge
+      POSTGRES_DB: voltedge
+    ports:
+      - "5432:5432"
+    volumes:
+      - voltedge-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  voltedge-postgres-data:
