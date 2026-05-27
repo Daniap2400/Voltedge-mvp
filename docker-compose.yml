@@ -29,7 +29,7 @@ services:
       POSTGRES_PASSWORD: voltedge
       POSTGRES_DB: voltedge
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - voltedge-postgres-data:/var/lib/postgresql/data
 
