@@ -1,31 +1,33 @@
 # VoltEdge MVP – Smart EV Charging Infrastructure
 
-Dette repository indeholder den tekniske MVP til 6. semester eksamensopgaven i Økonomi og IT.
+Dette repository indeholder vores tekniske MVP til eksamensopgaven på 6. semester i Økonomi og IT.
 
-Projektet tager udgangspunkt i casevirksomheden VoltEdge Mobility A/S, som arbejder med smart EV charging infrastructure. MVP’en demonstrerer en afgrænset, men central del af den fremtidige platform med fokus på Charging Context og Analytics Context.
+Projektet tager udgangspunkt i casevirksomheden VoltEdge Mobility A/S, som arbejder med digitale løsninger til styring og overvågning af ladeinfrastruktur. I MVP’en har vi valgt at fokusere på en mindre, men central del af platformen: håndtering af ladestandere, ladesessioner, telemetri og analytics.
 
-MVP’en er ikke en fuld produktionsklar løsning, men et teknisk proof-of-concept, der viser hvordan API, data, Docker, analytics, machine learning, Business Intelligence og CI/CD kan kobles sammen i en realistisk løsning.
-
----
-
-## Formål
-
-Formålet med MVP’en er at understøtte VoltEdges strategiske fokusområder:
-
-- Scale Operations
-- Data-driven Services
-- Secure & Reliable Platform
-- Monitoring og drift
-- Predictive maintenance
-- Business Intelligence
-
-Løsningen viser, hvordan operationelle data fra ladestandere og ladesessioner kan struktureres, gemmes og anvendes til analytics og visualisering.
+Målet har ikke været at bygge hele VoltEdges fremtidige platform færdig. I stedet viser MVP’en, hvordan nogle af de vigtigste dele kan hænge sammen teknisk gennem API, database, Docker, analytics, machine learning, Power BI og CI/CD.
 
 ---
 
-## Hvad demonstrerer MVP’en?
+## Hvad løsningen fokuserer på
 
-MVP’en demonstrerer:
+I rapporten arbejder vi især med VoltEdges udfordringer omkring skalering, fragmenteret data og behovet for mere datadrevet drift.
+
+Derfor fokuserer MVP’en på to områder:
+
+- Charging Context
+- Analytics Context
+
+Charging Context dækker den del af løsningen, hvor ladestandere, connectors, telemetri og ladesessioner håndteres.
+
+Analytics Context dækker den del, hvor data bruges videre til nøgletal, fejlrate, energiforbrug, simple forecasts og anomalier.
+
+Det vigtigste i løsningen er, at data ikke kun bliver modtaget og gemt, men også bliver brugt videre til analyse og visualisering.
+
+---
+
+## Hvad MVP’en indeholder
+
+MVP’en indeholder:
 
 - FastAPI-baseret API
 - Docker Compose setup med API og PostgreSQL
@@ -33,7 +35,7 @@ MVP’en demonstrerer:
 - Repository pattern og persistence layer
 - AnalyticsService som domain service
 - Machine learning notebook til predictive maintenance
-- Power BI dashboard som uafhængig BI-løsning
+- Power BI dashboard som separat BI-løsning
 - GitHub Actions til CI/CD
 - Dokumentation for logging, monitoring, fejlhåndtering og rollback
 
@@ -41,15 +43,21 @@ MVP’en demonstrerer:
 
 ## Afgrænsning
 
-MVP’en implementerer ikke hele den fremtidige event-driven microservice-arkitektur.
+MVP’en er et proof-of-concept og ikke en produktionsklar løsning.
 
-I stedet realiserer løsningen en afgrænset del af arkitekturen:
+Vi har valgt at implementere en afgrænset del af arkitekturen, så løsningen stadig er realistisk inden for projektets scope.
 
-- Charging Context: håndtering af ladestandere, connectors, telemetri og charging sessions
-- Analytics Context: beregning af nøgletal, fejlrate, energiforbrug, forecast og anomalier
-- BI/ML: predictive maintenance og Power BI-rapport baseret på syntetiske data
+Det betyder, at følgende ikke er fuldt implementeret:
 
-Billing, settlement, OCPP-kommunikation og partnerintegrationer indgår som arkitektur- og rapportmæssige perspektiver, men er ikke fuldt implementeret i MVP’en.
+- rigtig OCPP-kommunikation
+- billing og settlement
+- partnerintegrationer
+- authentication og authorization
+- realtime integration mellem API og Power BI
+- ekstern monitoring
+- produktionsklar ML-model
+
+De dele er i stedet beskrevet i rapporten som videreudvikling og som en del af den større arkitektur.
 
 ---
 
@@ -184,7 +192,7 @@ Seed-scriptet opretter demo-data for:
 - telemetry readings
 - charging sessions
 
-Disse data kan bruges til API-demo og analytics endpoints.
+De data kan bruges til API-demo og analytics endpoints.
 
 ---
 
@@ -284,11 +292,13 @@ Body:
 
 ## Analytics som domain service
 
-Analytics er implementeret som en domain service i:
+Analytics-delen ligger i:
 
 ```text
 services/api/app/domain/analytics_service.py
 ```
+
+Her har vi samlet analysefunktionalitet i en domain service i stedet for at placere beregningerne direkte i API-laget.
 
 AnalyticsService beregner blandt andet:
 
@@ -302,33 +312,35 @@ AnalyticsService beregner blandt andet:
 - forventet efterspørgsel
 - energianomalier
 
-Dette understøtter rapportens fokus på data-driven services og viser, hvordan operationelle data kan omsættes til forretningsmæssig indsigt.
+Det viser, hvordan operationelle data kan bruges videre til indsigt og ikke kun til almindelig lagring.
 
 ---
 
 ## Machine Learning
 
-Machine learning-delen ligger i:
+Machine learning-delen ligger her:
 
 ```text
 analytics/ml/predictive_maintenance.ipynb
 ```
 
-Notebooken demonstrerer predictive maintenance baseret på syntetiske operationsdata.
+Notebooken arbejder med predictive maintenance baseret på syntetiske operationsdata.
 
-Formålet er at vise, hvordan historiske data om ladestandere, fejl, oppetid og energiforbrug kan bruges til at forudsige vedligeholdelsesrisiko.
+Formålet er at vise, hvordan data om fejl, oppetid, sessioner og energiforbrug kan bruges til at vurdere, hvilke ladestandere der har forhøjet risiko for vedligeholdelse.
+
+ML-delen skal ikke forstås som en færdig produktionsmodel, men som et eksempel på, hvordan VoltEdge kunne arbejde videre med predictive analytics.
 
 ---
 
 ## Business Intelligence
 
-Power BI-rapporten ligger i:
+Power BI-rapporten ligger her:
 
 ```text
 analytics/bi/Voltedge Bi rapport.pbix
 ```
 
-Rapporten visualiserer blandt andet:
+Rapporten viser blandt andet:
 
 - total chargers
 - total sessions
@@ -341,7 +353,9 @@ Rapporten visualiserer blandt andet:
 - energiforbrug over tid
 - detaljeret charger-tabel
 
-BI-rapporten er baseret på flade CSV-filer som proof-of-concept. I en produktionsklar løsning ville data typisk blive ført gennem et ETL/ELT-lag, fx Microsoft Fabric og Lakehouse.
+I MVP’en er Power BI-rapporten baseret på flade CSV-filer. Det er valgt for at holde løsningen enkel og demonstrere sammenhængen mellem data, ML og BI uden at bygge en fuld data platform.
+
+I en mere færdig løsning ville data typisk gå gennem et ETL/ELT-lag, fx Microsoft Fabric og Lakehouse, før det blev brugt i Power BI.
 
 ---
 
@@ -349,7 +363,7 @@ BI-rapporten er baseret på flade CSV-filer som proof-of-concept. I en produktio
 
 Projektet bruger GitHub Actions.
 
-Workflowet ligger i:
+Workflowet ligger her:
 
 ```text
 .github/workflows/ci.yml
@@ -363,13 +377,13 @@ Pipeline kører:
 4. Pytest
 5. Docker build
 
-Formålet er at sikre, at ændringer testes automatisk før merge eller aflevering.
+Det gør, at ændringer automatisk bliver valideret, før de merges eller afleveres.
 
 ---
 
 ## Drift og operations
 
-Driftsdokumentation ligger i:
+Driftsdokumentation ligger her:
 
 ```text
 ops/
@@ -385,13 +399,13 @@ MVP’en forholder sig til:
 - rollback
 - CI/CD som kvalitetssikring
 
-I produktion ville dette kunne udvides med Azure Monitor, Application Insights, Prometheus/Grafana, struktureret JSON logging, alerts og correlation IDs.
+Der er ikke implementeret et fuldt eksternt monitoring-setup, men løsningen har grundlaget for det gennem health endpoint, logs, tests og CI/CD.
 
 ---
 
 ## Demo
 
-Demo-guide ligger i:
+Demo-guide ligger her:
 
 ```text
 docs/demo-guide.md
@@ -414,7 +428,7 @@ Demoen viser:
 
 ## Kendte begrænsninger
 
-MVP’en har følgende afgrænsninger:
+MVP’en har følgende begrænsninger:
 
 - Data er syntetiske og ikke fra en rigtig VoltEdge-platform
 - Power BI er baseret på flade CSV-filer
@@ -429,7 +443,7 @@ MVP’en har følgende afgrænsninger:
 
 ## Kobling til rapporten
 
-Repoet understøtter rapportens røde tråd:
+Repoet følger samme røde tråd som rapporten:
 
 ```text
 Strategi
@@ -441,4 +455,4 @@ Strategi
 → Evaluering og refleksion
 ```
 
-Den tekniske løsning viser konkret, hvordan rapportens arkitekturvalg kan realiseres i en mindre MVP.
+Den tekniske løsning viser, hvordan nogle af rapportens arkitekturvalg kan realiseres i en mindre MVP.
