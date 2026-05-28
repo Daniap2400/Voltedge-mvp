@@ -1,15 +1,33 @@
 # Persistering og databasedesign
 
-MVP’en anvender et repository pattern til at adskille domænemodellen fra den konkrete databaseimplementering. Det betyder, at domænelaget ikke er afhængigt af, om data gemmes midlertidigt i hukommelsen eller permanent i en PostgreSQL-database.
+Dette dokument beskriver MVP’ens persisteringslag og koblingen mellem domænemodellen og databasen.
+
+MVP’en anvender repository pattern til at adskille domænemodellen fra den konkrete databaseimplementering. Det betyder, at domænelaget ikke er afhængigt af, om data gemmes midlertidigt i hukommelsen eller permanent i en PostgreSQL-database.
+
+---
 
 ## Valg af persistering
 
 Løsningen understøtter to former for datalagring:
 
-- Ved lokale tests anvendes in-memory repositories.
-- Ved Docker-kørsel anvendes PostgreSQL, når `USE_DATABASE=true`.
+| Miljø | Persistering | Formål |
+|---|---|---|
+| Tests | In-memory repositories | Hurtige og simple tests uden database |
+| Docker/local demo | PostgreSQL | Realistisk persisteringslag til MVP-demo |
 
-Denne opdeling gør det muligt at holde testmiljøet simpelt og hurtigt, samtidig med at MVP’en demonstrerer et reelt persisteringslag i den tekniske løsning.
+Ved Docker-kørsel anvendes PostgreSQL, når:
+
+```env
+USE_DATABASE=true
+```
+
+Database connection sættes med:
+
+```env
+DATABASE_URL=postgresql+psycopg://voltedge:voltedge@db:5432/voltedge
+```
+
+---
 
 ## Databasetabeller
 
@@ -20,15 +38,78 @@ Denne opdeling gør det muligt at holde testmiljøet simpelt og hurtigt, samtidi
 | `charging_sessions` | `ChargingSession` entity | Gemmer startede og afsluttede ladesessioner |
 | `telemetry_readings` | `TelemetryReading` value-object-lignende data | Gemmer målinger fra ladestandere, fx effekt, spænding, strøm og fejlkoder |
 
+---
+
 ## Kobling til Domain Driven Design
 
-Databasemodellen er udledt af de centrale begreber i domænemodellen. `Charger` fungerer som et aggregate, der indeholder én eller flere `Connector` entities. `ChargingSession` repræsenterer en konkret ladesession, mens `TelemetryReading` repræsenterer måledata fra ladestanderen.
+Databasemodellen er udledt af de centrale begreber i domænemodellen.
 
-API’et arbejder ikke direkte mod databasen, men gennem repository interfaces. Det betyder, at domæne- og applikationslaget holdes uafhængigt af infrastrukturen. Denne opdeling understøtter Domain Driven Design, fordi forretningslogikken kan udvikles og testes uden at være bundet til en bestemt database.
+I MVP’en er de vigtigste begreber:
+
+- `Charger`
+- `Connector`
+- `TelemetryReading`
+- `ChargingSession`
+- `AnalyticsService`
+
+`Charger` fungerer som et aggregate, der indeholder én eller flere `Connector` entities.
+
+`ChargingSession` repræsenterer en konkret ladesession.
+
+`TelemetryReading` repræsenterer måledata fra en ladestander på et bestemt tidspunkt.
+
+`AnalyticsService` anvender data fra repositories til at beregne nøgletal og indsigter.
+
+---
+
+## Repository pattern
+
+API’et arbejder ikke direkte mod databasen.
+
+I stedet går dataflowet gennem repositories:
+
+```text
+API endpoint
+        |
+        v
+Application use case
+        |
+        v
+Repository interface
+        |
+        v
+Repository implementation
+        |
+        v
+Database / memory
+```
+
+Denne opdeling understøtter Domain Driven Design, fordi forretningslogikken kan udvikles og testes uden at være bundet til en bestemt database.
+
+---
 
 ## Seed-data
 
-Scriptet `services/api/scripts/seed_database.py` opretter realistisk demo-data for ladestandere, telemetry readings og ladesessioner. Disse data kan bruges til at teste API’et, demonstrere analytics endpoints og senere danne grundlag for BI/Power BI.
+Scriptet til seed-data ligger her:
+
+```text
+services/api/scripts/seed_database.py
+```
+
+Scriptet opretter realistisk demo-data for:
+
+- ladestandere
+- connectors
+- telemetry readings
+- ladesessioner
+
+Kør scriptet med:
+
+```bash
+docker compose exec api python scripts/seed_database.py
+```
+
+---
 
 ## Sammenhæng i løsningen
 
@@ -41,3 +122,12 @@ DDD-domænemodel
 → PostgreSQL database
 → Analytics endpoints
 → BI/Power BI
+```
+
+---
+
+## Afgrænsning
+
+MVP’en bruger ikke database migrations.
+
+I en produktionsklar løsning bør der tilføjes migrationsværktøj, fx Alembic, så ændringer i databasemodellen kan versioneres og rulles sikkert ud.
